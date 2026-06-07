@@ -53,14 +53,30 @@ Narrative: search intent → topic detection → Amazon Care reasons-for-visit t
       cannot embed web apps; dialogs only work in edit mode)
 
 ## Tasks
-- [ ] Scaffold Vite + React + TS app
-- [ ] Build `triage-data.ts` (topics, questions, weights, tiers, products, rationales)
-- [ ] Build components: SearchBar → TopicChip → IntakeQuestions → RecommendationCard
-- [ ] Styling (Amazon-inspired light theme) + transitions + progress dots + reset + disclaimer
-- [ ] Verify all 4 topics land on distinct tiers; verify red-flag short-circuits
-- [ ] Production build, deploy to GitHub Pages
-- [ ] Playwright-scripted MP4 walkthrough
-- [ ] Hand off: live URL + video file
+- [x] Scaffold Vite + React + TS app
+- [x] Build `triage-data.ts` (topics, questions, weights, tiers, products, rationales)
+- [x] Build components: SearchBar → TopicChip → IntakeQuestions → RecommendationCard
+- [x] Styling (Amazon-inspired light theme) + transitions + progress dots + reset + disclaimer
+- [x] Verify all 4 topics land on distinct tiers; verify red-flag short-circuits
+- [x] Production build, deploy to GitHub Pages
+- [x] Playwright-scripted MP4 walkthrough
+- [x] Hand off: live URL + video file
 
 ## Review
-(to be filled in after implementation)
+
+**Shipped 2026-06-06.**
+
+- **Live demo:** https://reecejackson.github.io/health-intake-widget/
+- **Repo:** https://github.com/reecejackson/health-intake-widget (public)
+- **Video:** `video/walkthrough.mp4` — 41.6s, 1920×1080, 1.0 MB. Run 1: asthma
+  red-flag → emergency. Run 2: back pain mild path → self-care products.
+- **Verification:** `node scripts/verify.mjs` asserts all 5 care tiers are
+  reachable via real click paths against the production build (5/5 PASS):
+  emergency (asthma red flag), self-care (back pain mild), pharmacy (migraine
+  refill), virtual (UTI typical), primary (asthma worsening).
+- **Re-record video:** `node scripts/record.mjs` (after `npm run build`).
+- Architecture: all triage logic lives in `src/triage-data.ts` — topics →
+  weighted questions → per-topic severity bands → tiers, red flags short-circuit.
+  `App.tsx` is a small phase state machine (search → intake → result).
+- Notes: gh CLI is v1.x (legacy `repo create` syntax); Pages serves the
+  `gh-pages` branch (deploy = build + force-push `dist/`).
