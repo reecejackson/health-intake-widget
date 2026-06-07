@@ -14,6 +14,18 @@ const preview = spawn('npx', ['vite', 'preview', '--port', '4173', '--strictPort
   stdio: 'ignore',
 })
 
+// wait for the preview server BEFORE the recording context exists —
+// recording starts at context creation, so any wait after that point
+// becomes blank white frames at the head of the video
+for (let i = 0; i < 40; i++) {
+  try {
+    await fetch(URL)
+    break
+  } catch {
+    await new Promise((r) => setTimeout(r, 250))
+  }
+}
+
 const browser = await chromium.launch()
 // Playwright's screencast captures at CSS-viewport size and never upscales,
 // so supersampling must happen in-page: a 2560x1440 viewport with the page
@@ -78,22 +90,13 @@ async function answerSequence(labels, beforeMs = 2000) {
   }
 }
 
-// wait for preview server
-for (let i = 0; i < 20; i++) {
-  try {
-    await page.goto(URL, { timeout: 1000 })
-    break
-  } catch {
-    await new Promise((r) => setTimeout(r, 300))
-  }
-}
-
+await page.goto(URL)
 await page.evaluate(() => {
   document.documentElement.style.zoom = '2'
 })
 
 await page.mouse.move(1280, 600)
-await pause(2600) // hold on the hero
+await pause(3400) // hold on the hero (the first ~1.5s is trimmed below)
 
 // ---- run 1: asthma care → red-flag → emergency ----
 await searchFor('asthma care', 'asthma care')
@@ -120,6 +123,10 @@ renameSync(`video/raw/${raw}`, 'video/walkthrough.webm')
 rmSync('video/raw', { recursive: true })
 execFileSync(ffmpegPath, [
   '-y',
+  // trim the pre-paint blank frames so the video (and its poster
+  // thumbnail in Slides/Drive) opens on the hero, not a white screen
+  '-ss',
+  '1.5',
   '-i',
   'video/walkthrough.webm',
   '-vf',
