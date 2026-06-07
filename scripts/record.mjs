@@ -1,6 +1,7 @@
-// Records the ~60s walkthrough video for the presentation slide:
-// run 1 — "asthma care" red-flag short-circuit → emergency care
+// Records the ~55s walkthrough video for the presentation slide:
+// run 1 — "asthma care" moderate path → One Medical primary care CTA
 // run 2 — "back pain" mild path → self-care product recommendations
+// run 3 — "uti" red-flag short-circuit → emergency care
 // Outputs video/walkthrough.mp4 (1920x1080, 30fps).
 import { chromium } from 'playwright'
 import { spawn, execFileSync } from 'node:child_process'
@@ -98,11 +99,23 @@ await page.evaluate(() => {
 await page.mouse.move(1280, 600)
 await pause(3400) // hold on the hero (the first ~1.5s is trimmed below)
 
-// ---- run 1: asthma care → red-flag → emergency ----
+// hover an element to draw the viewer's eye without clicking through
+async function hover(locator) {
+  const box = await locator.boundingBox()
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 26 })
+}
+
+// ---- run 1: asthma care → moderate path → One Medical primary care ----
 await searchFor('asthma care', 'asthma care')
 await pause(2400) // topic chip + widget entrance
-await answerSequence(["Yes — it's hard to speak or catch my breath"])
-await pause(6500) // hold on the emergency recommendation
+await answerSequence([
+  "No, but I'm wheezing more than usual",
+  'Most days',
+  'Steadily getting worse',
+])
+await pause(2200) // read the recommendation
+await hover(page.locator('a.cta')) // spotlight the Amazon Health CTA
+await pause(3800)
 
 await moveAndClick(page.getByRole('button', { name: 'Start over' }))
 await pause(1300)
@@ -111,7 +124,18 @@ await pause(1300)
 await searchFor('back pain', 'back pain relief')
 await pause(1800)
 await answerSequence(['No', 'No — it came on gradually', 'A few days'])
-await pause(8000) // hold on the product recommendations
+await pause(2200)
+await hover(page.locator('a.product').nth(1)) // spotlight a product card
+await pause(3800)
+
+await moveAndClick(page.getByRole('button', { name: 'Start over' }))
+await pause(1300)
+
+// ---- run 3: uti → red-flag short-circuit → emergency care ----
+await searchFor('uti', 'uti relief')
+await pause(1800)
+await answerSequence(['Yes, one or more of those'])
+await pause(5500) // hold on the emergency recommendation
 
 await context.close()
 await browser.close()
