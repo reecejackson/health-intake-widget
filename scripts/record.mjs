@@ -15,9 +15,13 @@ const preview = spawn('npx', ['vite', 'preview', '--port', '4173', '--strictPort
 })
 
 const browser = await chromium.launch()
+// Playwright's screencast captures at CSS-viewport size and never upscales,
+// so supersampling must happen in-page: a 2560x1440 viewport with the page
+// at 2x CSS zoom renders a 1280x720 layout at double resolution. The ffmpeg
+// pass then downscales the master to a sharp 1080p.
 const context = await browser.newContext({
-  viewport: { width: 1920, height: 1080 },
-  recordVideo: { dir: 'video/raw', size: { width: 1920, height: 1080 } },
+  viewport: { width: 2560, height: 1440 },
+  recordVideo: { dir: 'video/raw', size: { width: 2560, height: 1440 } },
 })
 
 // visible cursor dot — Playwright videos don't render the OS pointer
@@ -84,7 +88,11 @@ for (let i = 0; i < 20; i++) {
   }
 }
 
-await page.mouse.move(960, 400)
+await page.evaluate(() => {
+  document.documentElement.style.zoom = '2'
+})
+
+await page.mouse.move(1280, 600)
 await pause(2600) // hold on the hero
 
 // ---- run 1: asthma care → red-flag → emergency ----
@@ -114,6 +122,8 @@ execFileSync(ffmpegPath, [
   '-y',
   '-i',
   'video/walkthrough.webm',
+  '-vf',
+  'scale=1920:1080:flags=lanczos',
   '-c:v',
   'libx264',
   '-pix_fmt',
@@ -121,7 +131,13 @@ execFileSync(ffmpegPath, [
   '-r',
   '30',
   '-crf',
-  '20',
+  '16',
+  '-preset',
+  'slow',
+  '-profile:v',
+  'high',
+  '-movflags',
+  '+faststart',
   'video/walkthrough.mp4',
 ])
 console.log('done: video/walkthrough.mp4')

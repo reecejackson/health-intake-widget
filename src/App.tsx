@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import {
   TIERS,
   TOPICS,
+  productUrl,
+  tierUrl,
   type AnswerOption,
   type Tier,
   type Topic,
@@ -139,7 +141,7 @@ export default function App() {
 
             <section className="widget" key={topic.id}>
               <div className="widget-head">
-                <h2 className="widget-title">Find the right care</h2>
+                <h2 className="widget-title">Find the right care from Amazon Health</h2>
                 <button className="link-btn" onClick={reset}>
                   Start over
                 </button>
@@ -218,18 +220,33 @@ function ResultCard({ topic, result }: { topic: Topic; result: TriageResult }) {
 
       {tier.id === 'otc' ? (
         <div className="products">
-          {topic.products.map((p) => (
-            <div className="product" key={p.name}>
+          {topic.products.map((p, i) => (
+            <a
+              className="product"
+              key={p.name}
+              href={productUrl(p, i, topic)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <div className="product-img">{p.emoji}</div>
               <div className="product-name">{p.name}</div>
               <div className="product-stars">
                 ★★★★<span className="star-dim">★</span> <span>{p.reviews}</span>
               </div>
               <div className="product-price">{p.price}</div>
-              <button className="cta cta-small">{tier.cta}</button>
-            </div>
+              <span className="cta cta-small">{tier.cta}</span>
+            </a>
           ))}
         </div>
+      ) : tierUrl(tier.id, topic) ? (
+        <a
+          className="cta"
+          href={tierUrl(tier.id, topic)!}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {tier.cta}
+        </a>
       ) : (
         <button className="cta">{tier.cta}</button>
       )}

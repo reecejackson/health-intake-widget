@@ -54,6 +54,31 @@ export interface Topic {
   bands: Band[]
 }
 
+/** ref-tag pattern mirroring the production widget's attribution scheme */
+function refTag(service: string, slot: number, topic: Topic): string {
+  const slug = topic.query.replace(/\s+/g, '')
+  return `ref_=health-hva-widget-top-compete_${service}_${slot}_amazonhealth${slug}`
+}
+
+/** real Amazon Health destination for a recommended tier, if one exists */
+export function tierUrl(tier: TierId, topic: Topic): string | null {
+  switch (tier) {
+    case 'pharmacy':
+      return `https://www.amazon.com/s?k=${encodeURIComponent(topic.name.toLowerCase())}&i=amazon-pharmacy&${refTag('phm', 1, topic)}`
+    case 'virtual':
+      return `https://health.amazon.com/onemedical/pay-per-visit?${refTag('onmpv', 1, topic)}`
+    case 'primary':
+      return `https://health.amazon.com/onemedical/dp/B0D4XHF8ZD?${refTag('onm', 1, topic)}`
+    default:
+      return null // self-care links per product; emergency intentionally has no deep link
+  }
+}
+
+/** Amazon search destination for a recommended OTC product */
+export function productUrl(product: Product, slot: number, topic: Topic): string {
+  return `https://www.amazon.com/s?k=${encodeURIComponent(product.name)}&${refTag('otc', slot + 1, topic)}`
+}
+
 export const TIERS: Record<TierId, Tier> = {
   otc: {
     id: 'otc',
