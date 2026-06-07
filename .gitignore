@@ -3,3 +3,4 @@ dist/
 video/
 *.local
 .DS_Store
+shots/
